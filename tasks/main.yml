@@ -1,0 +1,23 @@
+- name: Ensure Kubic repository is installed
+  apt_repository:
+    filename: kubic-libcontainers-stable.list
+    repo: deb {{ kubic_libcontainers_repo_url }} /
+    state: present
+    update_cache: yes
+  become: yes
+
+- name: Ensure Kubic apt key is installed
+  apt_key:
+    url: "{{ kubic_libcontainers_repo_key_url }}"
+    state: present
+  become: yes
+
+- name: Ensure Podman rootless and its dependencies are installed
+  apt:
+    name: "{{ podman_packages }}"
+  become: yes
+
+- include: setup-podman-container.yml
+  loop: "{{ podman_containers }}"
+  loop_control:
+    loop_var: container

@@ -1,0 +1,60 @@
+- name: Check the user existence
+  user:
+    name: "{{ container.user }}"
+    state: present
+  register: container_user
+
+- name: Set ports in container_arguments
+  set_fact:
+    container_arguments: "{{ container_arguments|default('') }} -p {{ item }}"
+  loop: "{{ container.ports }}"
+
+- name: Set volumes in container_arguments
+  set_fact:
+    container_arguments: "{{ container_arguments|default('') }} -v {{ item.name|default(item.hostPath) }}:{{ item.mountPath }}"
+  loop: "{{ container.volumes }}"
+
+- name: List existing volumes
+  command: podman volume list -q
+  changed_when: false
+  register: volume_list
+
+- name: Create a volume
+  command: podman volume create {{ item.name }}
+  loop: "{{ container.volumes }}"
+  when:
+    - item.name is defined
+    - item.name not in volume_list.stdout_lines
+
+- name: Check the existence of the systemd container service unit
+  stat:
+    path: /etc/systemd/system/container-{{ container.name }}.service
+  register: systemd_unit_file
+
+- name: Configure the systemd container service unit
+  template:
+    src: container-service.j2
+    dest: /etc/systemd/system/container-{{ container.name }}.service
+    owner: root
+    group: root
+    mode: "0644"
+  become: yes
+  register: systemd_unit_file_content
+
+- name: Ensure that the systemd container service is enabled and started
+  systemd:
+    name: container-{{ container.name }}.service
+    enabled: yes
+    state: started
+  become: yes
+  when: not systemd_unit_file.stat.exists
+
+- name: Ensure that the systemd container service is restarted
+  systemd:
+    name: container-{{ container.name }}.service
+    state: restarted
+    daemon_reload: yes
+  become: yes
+  when:
+    - systemd_unit_file.stat.exists
+    - systemd_unit_file_content.changed
