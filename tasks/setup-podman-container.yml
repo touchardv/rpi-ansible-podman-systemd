@@ -1,18 +1,56 @@
+- name: Initialise Podman arguments
+  set_fact:
+    container_flags: "{{ container.flags|default('') }}"
+
 - name: Check the user existence
   user:
     name: "{{ container.user }}"
     state: present
   register: container_user
 
-- name: Set ports in container_arguments
-  set_fact:
-    container_arguments: "{{ container_arguments|default('') }} -p {{ item }}"
-  loop: "{{ container.ports }}"
+- name: Check the container image
+  podman_image:
+    name: "{{ container.image }}"
+    state: present
+  async: 120
+  poll: 5
 
-- name: Set volumes in container_arguments
+- name: Set ports in container_flags
   set_fact:
-    container_arguments: "{{ container_arguments|default('') }} -v {{ item.name|default(item.hostPath) }}:{{ item.mountPath }}"
-  loop: "{{ container.volumes }}"
+    container_flags: "{{ container_flags }} -p={{ item }}"
+  loop: "{{ container.ports|default([]) }}"
+
+- name: Check the local device existence
+  stat:
+    path: "{{ item.hostPath }}"
+  loop: "{{ container.devices|default([]) }}"
+  register: check_devices
+
+- name: Verify the device existence
+  fail:
+    msg: The device {{ item.item.hostPath }} does not exist
+  loop: "{{ check_devices.results }}"
+  when: not item.stat.exists
+ 
+- name: Set devices in container_flags
+  set_fact:
+    container_flags: "{{ container_flags }} --device={{ item.name|default(item.hostPath) }}:{{ item.mountPath }}"
+  loop: "{{ container.devices|default([]) }}"
+
+- name: Check the local file existence
+  stat:
+    path: "{{ item.hostPath }}"
+  when: item.name is not defined
+  loop: "{{ container.volumes|default([]) }}"
+  register: check_files
+
+- name: Verify the local file existence
+  fail:
+    msg: The file/directory {{ item.item.hostPath }} does not exist
+  loop: "{{ check_files.results }}"
+  when:
+    - item.stat is defined
+    - not item.stat.exists
 
 - name: List existing volumes
   command: podman volume list -q
@@ -25,6 +63,11 @@
   when:
     - item.name is defined
     - item.name not in volume_list.stdout_lines
+
+- name: Set volumes in container_flags
+  set_fact:
+    container_flags: "{{ container_flags }} --volume={{ item.name|default(item.hostPath) }}:{{ item.mountPath }}"
+  loop: "{{ container.volumes|default([]) }}"
 
 - name: Check the existence of the systemd container service unit
   stat:

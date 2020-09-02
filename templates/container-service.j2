@@ -1,16 +1,16 @@
 [Unit]
-Description=Podman container-{{ container.name }}.service
+Description=Podman running container {{ container.name }}
 Wants=network.target
-After=network-online.target
+After=network-online.target user-runtime-dir@{{ container_user.uid }}.service
 
 [Service]
 Environment=PODMAN_SYSTEMD_UNIT=%n
 Restart=on-failure
-ExecStartPre=/bin/rm -f /run/user/{{ container_user.uid}}/%n.pid /run/user/{{ container_user.uid}}/%n.cid
-ExecStart=/usr/bin/podman run --conmon-pidfile /run/user/{{ container_user.uid}}/%n.pid --cidfile /run/user/{{ container_user.uid}}/%n.cid --cgroups=no-conmon -d --replace --name {{ container.name }} {{ container_arguments }} {{ container.image }}
-ExecStop=/usr/bin/podman stop --ignore --cidfile /run/user/{{ container_user.uid}}/%n.cid -t 10
-ExecStopPost=/usr/bin/podman rm --ignore -f --cidfile /run/user/{{ container_user.uid}}/%n.cid
-PIDFile=/run/user/{{ container_user.uid}}/%n.pid
+ExecStartPre=/bin/rm -f /run/user/{{ container_user.uid }}/%n.pid /run/user/{{ container_user.uid }}/%n.cid
+ExecStart=/usr/bin/podman run --conmon-pidfile /run/user/{{ container_user.uid }}/%n.pid --cidfile=/run/user/{{ container_user.uid }}/%n.cid --cgroups=no-conmon -d {{ container_flags }} --replace --name {{ container.name }} {{ container.image }}
+ExecStop=/usr/bin/podman stop --ignore --cidfile /run/user/{{ container_user.uid }}/%n.cid -t 10
+ExecStopPost=/usr/bin/podman rm --ignore -f --cidfile /run/user/{{ container_user.uid }}/%n.cid
+PIDFile=/run/user/{{ container_user.uid }}/%n.pid
 KillMode=none
 User={{ container.user }}
 Type=forking
