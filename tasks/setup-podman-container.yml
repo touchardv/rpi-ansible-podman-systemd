@@ -31,7 +31,7 @@
     msg: The device {{ item.item.hostPath }} does not exist
   loop: "{{ check_devices.results }}"
   when: not item.stat.exists
- 
+
 - name: Set devices in container_flags
   set_fact:
     container_flags: "{{ container_flags }} --device={{ item.name|default(item.hostPath) }}:{{ item.mountPath }}"

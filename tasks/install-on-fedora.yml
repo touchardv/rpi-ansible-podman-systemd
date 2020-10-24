@@ -1,0 +1,8 @@
+- name: Ensure Podman and its dependencies are installed
+  dnf:
+    name:
+      - slirp4netns
+      - fuse-overlayfs
+      - podman
+    state: present
+  become: true
