@@ -2,11 +2,25 @@
   set_fact:
     container_flags: "{{ container.flags|default('') }}"
 
-- name: Check the user existence
-  user:
-    name: "{{ container.user }}"
-    state: present
-  register: container_user
+- block:
+    - name: Check the user existence
+      user:
+        name: "{{ container.user }}"
+        state: present
+      register: _user
+
+    - name: Set user run storage directory
+      set_fact:
+        container_user_uid: "{{ _user.uid }}"
+        run_dir: /run/user/{{ _user.uid }}
+  when: container.user != 'root'
+
+- block:
+    - name: Set root run storage directory
+      set_fact:
+        container_user_uid: '0'
+        run_dir: /var/run
+  when: container.user == 'root'
 
 - name: Check the container image
   podman_image:
