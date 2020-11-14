@@ -28,6 +28,7 @@
     state: present
   async: 120
   poll: 5
+  become: "{{ 'yes' if container.user == 'root' else 'no' }}"
 
 - name: Set ports in container_flags
   set_fact:
