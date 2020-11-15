@@ -3,6 +3,7 @@ kubic_libcontainers_repo_url: https://download.opensuse.org/repositories/devel:/
 kubic_libcontainers_repo_key_url: https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/Raspbian_10/Release.key
 
 podman_packages:
+  - containernetworking-plugins
   - slirp4netns
   - fuse-overlayfs
   - podman-rootless
