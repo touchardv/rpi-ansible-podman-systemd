@@ -1,3 +1,9 @@
+- name: Ensure Kubic apt key is installed
+  apt_key:
+    url: "{{ kubic_libcontainers_repo_key_url }}"
+    state: present
+  become: yes
+
 - name: Ensure Kubic repository is installed
   apt_repository:
     filename: kubic-libcontainers-stable
@@ -6,12 +12,6 @@
     update_cache: yes
   become: yes
   register: apt_sources
-
-- name: Ensure Kubic apt key is installed
-  apt_key:
-    url: "{{ kubic_libcontainers_repo_key_url }}"
-    state: present
-  become: yes
 
 - name: Update packages
   command: apt-get update
