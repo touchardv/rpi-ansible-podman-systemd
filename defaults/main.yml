@@ -7,3 +7,4 @@ podman_packages:
   - slirp4netns
   - fuse-overlayfs
   - podman-rootless
+  - uidmap
