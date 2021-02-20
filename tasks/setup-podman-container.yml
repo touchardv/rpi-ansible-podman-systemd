@@ -58,6 +58,7 @@
   when: item.name is not defined
   loop: "{{ container.volumes|default([]) }}"
   register: check_files
+  become: "{{ 'yes' if container.user == 'root' else 'no' }}"
 
 - name: Verify the local file existence
   fail:
