@@ -7,13 +7,13 @@ After=network-online.target user-runtime-dir@{{ container_user_uid }}.service
 Environment=PODMAN_SYSTEMD_UNIT=%n
 Restart=on-failure
 ExecStartPre=/bin/rm -f {{ run_dir }}/%n.pid {{ run_dir }}/%n.cid
-ExecStart=/usr/bin/podman run --conmon-pidfile {{ run_dir }}/%n.pid --cidfile={{ run_dir }}/%n.cid --cgroups=no-conmon -d {{ container_flags }} --replace --name {{ container.name }} {{ container.image }}
+ExecStart=/usr/bin/podman run --conmon-pidfile {{ run_dir }}/%n.pid --cidfile={{ run_dir }}/%n.cid --cgroups=no-conmon {{ container_flags }} --replace --name {{ container.name }} {{ container.image }}
 ExecStop=/usr/bin/podman stop --ignore --cidfile {{ run_dir }}/%n.cid -t 10
 ExecStopPost=/usr/bin/podman rm --ignore -f --cidfile {{ run_dir }}/%n.cid
 PIDFile={{ run_dir }}/%n.pid
 KillMode=none
 User={{ container.user }}
-Type=forking
+Type=simple
 
 [Install]
 WantedBy=multi-user.target default.target
