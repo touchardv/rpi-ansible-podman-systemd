@@ -1,3 +1,25 @@
+- name: Ensure buster-backports apt key is installed
+  apt_key:
+    keyserver: keyserver.ubuntu.com
+    id: "{{ item }}"
+    state: present
+  become: yes
+  with_items:
+    - 04EE7237B7D453EC
+    - 648ACFD622F3D138
+
+- name: Ensure buster-backports repository is installed
+  apt_repository:
+    repo: deb http://deb.debian.org/debian buster-backports main
+    state: present
+  become: yes
+
+- name: Ensure libseccomp2 from buster-backports is installed
+  apt:
+    name: libseccomp2=2.4.4-1~bpo10+1
+    state: present
+  become: yes
+
 - name: Ensure Kubic apt key is installed
   apt_key:
     url: "{{ kubic_libcontainers_repo_key_url }}"
@@ -22,3 +44,6 @@
   apt:
     name: "{{ podman_packages }}"
   become: yes
+
+- name: Restart dbus for rootless podman
+  shell: systemctl --user restart dbus
