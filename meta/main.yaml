@@ -1,0 +1,8 @@
+galaxy_info:
+  role_name: rpi-ansible-podman-systemd
+  author: Vincent Touchard
+  min_ansible_version:
+
+  galaxy_tags: []
+
+dependencies: []
