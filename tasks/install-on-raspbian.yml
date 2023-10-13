@@ -1,11 +1,20 @@
 - name: Update packages
   command: apt-get update
   become: yes
+  when: ansible_facts['lsb']['codename'] != "bookworm"
 
 - name: Ensure Podman rootless and its dependencies are installed
   apt:
     name: "{{ podman_packages }}"
   become: yes
+  when: ansible_facts['lsb']['codename'] != "bookworm"
 
 - name: Restart dbus for rootless podman
   shell: systemctl --user restart dbus
+  when: ansible_facts['lsb']['codename'] != "bookworm"
+
+- name: Ensure Podman is installed
+  apt:
+    name: podman
+  become: yes
+  when: ansible_facts['lsb']['codename'] == "bookworm"
